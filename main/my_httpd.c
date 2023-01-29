@@ -253,6 +253,12 @@ static esp_err_t echo_post_handler(httpd_req_t *req)
         ESP_LOGI(TAG, "=========== RECEIVED DATA ==========");
         ESP_LOGI(TAG, "%.*s", ret, buf);
         ESP_LOGI(TAG, "====================================");
+        if (NULL != strstr(buf, "foward")) {
+            ESP_LOGI(TAG, "get cmd FOWARD!");
+        }
+        else if (NULL != strstr(buf, "back")) {
+            ESP_LOGI(TAG, "get cmd BACK");
+        }
     }
 
     // End response
