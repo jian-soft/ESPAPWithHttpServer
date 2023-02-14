@@ -1,5 +1,7 @@
 idf_component_register(
-    SRCS 
-        "main.c"
-        "my_httpd.c"
-    INCLUDE_DIRS ".")
+	SRCS 
+		"main.c"
+		"my_httpd.c"
+		"drv8833_pwm.c"
+		"my_wifi.c"
+	INCLUDE_DIRS ".")
