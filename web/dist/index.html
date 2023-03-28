@@ -1,0 +1,59 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="UTF-8">
+    <title>炫酷小车</title>
+    <style>
+    .size {width:150px;height:70px;}
+    .up {position:fixed; left:90px; top:10px}
+    .down {position:fixed; left: 90px; top:170px}
+    .left {position:fixed; left: 10px; top:90px}
+    .right {position:fixed; left: 170px; top:90px}
+    * {
+        -webkit-touch-callout:none;
+        -webkit-user-select:none;
+        -khtml-user-select:none;
+        -moz-user-select:none;
+        -ms-user-select:none;
+        user-select:none;
+    }
+    </style>
+</head>
+<body>
+    <button class="size up" ontouchstart="onArrowDown('foward')" ontouchend="onArrowUp('foward')">上</button>
+    <button class="size down" ontouchstart="onArrowDown('back')" ontouchend="onArrowUp('back')">下</button>
+    <button class="size left" ontouchstart="onArrowDown('left')" ontouchend="onArrowUp('left')">左</button>
+    <button class="size right" ontouchstart="onArrowDown('right')" ontouchend="onArrowUp('right')">右</button>
+<script>
+    window.oncontextmenu=function(e){
+        e.preventDefault();
+    };
+    function onArrowDown(direction) {
+        console.log(direction)
+        const data = {key: direction}
+        postData(data)
+    }
+    function onArrowUp(direction) {
+        const data = {key: "stop"}
+        postData(data)
+    }
+
+    function postData(data) {
+        fetch("/echo", {
+            method: "POST", // or 'PUT'
+            headers: {
+                "Content-Type": "application/json",
+            },
+            body: JSON.stringify(data),
+            })
+            .then((response) => response.text())
+            .then((data) => {
+                console.log("Success:", data);
+            })
+            .catch((error) => {
+                console.error("Error:", error);
+            });
+    }
+</script>
+</body>
+</html>

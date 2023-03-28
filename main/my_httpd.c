@@ -6,7 +6,8 @@
    software is distributed on an "AS IS" BASIS, WITHOUT WARRANTIES OR
    CONDITIONS OF ANY KIND, either express or implied.
 */
-
+#include <string.h>
+#include <fcntl.h>
 #include <esp_wifi.h>
 #include <esp_event.h>
 #include <esp_log.h>
@@ -18,6 +19,7 @@
 #include "esp_eth.h"
 #include "esp_tls_crypto.h"
 #include <esp_http_server.h>
+#include "esp_vfs.h"
 #include "drv8833_pwm.h"
 
 /* A simple example that demonstrates how to create GET and POST
@@ -237,8 +239,7 @@ static esp_err_t echo_post_handler(httpd_req_t *req)
 
     while (remaining > 0) {
         /* Read the data for the request */
-        if ((ret = httpd_req_recv(req, buf,
-                        MIN(remaining, sizeof(buf)))) <= 0) {
+        if ((ret = httpd_req_recv(req, buf, MIN(remaining, sizeof(buf)))) <= 0) {
             if (ret == HTTPD_SOCK_ERR_TIMEOUT) {
                 /* Retry receiving if timeout occurred */
                 continue;
@@ -247,7 +248,7 @@ static esp_err_t echo_post_handler(httpd_req_t *req)
         }
 
         /* Send back the same data */
-        httpd_resp_send_chunk(req, buf, ret);
+        //httpd_resp_send_chunk(req, buf, ret);
         remaining -= ret;
 
         /* Log data received */
@@ -255,16 +256,16 @@ static esp_err_t echo_post_handler(httpd_req_t *req)
         ESP_LOGI(TAG, "%.*s", ret, buf);
         ESP_LOGI(TAG, "====================================");
         if (NULL != strstr(buf, "foward")) {
-            ESP_LOGI(TAG, "get cmd FOWARD!");
-            drv8833_motorA_foward();
+            car_foward();
         } else if (NULL != strstr(buf, "back")) {
-            ESP_LOGI(TAG, "get cmd BACK");
-            drv8833_motorA_back();
+            car_back();
+        } else if (NULL != strstr(buf, "left")) {
+            car_turn_left();
+        } else if (NULL != strstr(buf, "right")) {
+            car_turn_right();
         } else if (NULL != strstr(buf, "stop")) {
-            ESP_LOGI(TAG, "get cmd stop");
-            drv8833_motorA_stop();
+            car_stop();
         }
-
     }
 
     // End response
@@ -306,27 +307,116 @@ esp_err_t http_404_error_handler(httpd_req_t *req, httpd_err_code_t err)
     return ESP_FAIL;
 }
 
+#define FILE_PATH_MAX (ESP_VFS_PATH_MAX + 128)
+#define SCRATCH_BUFSIZE (10240)
+char scratch[SCRATCH_BUFSIZE];
+
+#define CHECK_FILE_EXTENSION(filename, ext) (strcasecmp(&filename[strlen(filename) - strlen(ext)], ext) == 0)
+
+/* Set HTTP response content type according to file extension */
+static esp_err_t set_content_type_from_file(httpd_req_t *req, const char *filepath)
+{
+    const char *type = "text/plain";
+    if (CHECK_FILE_EXTENSION(filepath, ".html")) {
+        type = "text/html";
+    } else if (CHECK_FILE_EXTENSION(filepath, ".js")) {
+        type = "application/javascript";
+    } else if (CHECK_FILE_EXTENSION(filepath, ".css")) {
+        type = "text/css";
+    } else if (CHECK_FILE_EXTENSION(filepath, ".png")) {
+        type = "image/png";
+    } else if (CHECK_FILE_EXTENSION(filepath, ".ico")) {
+        type = "image/x-icon";
+    } else if (CHECK_FILE_EXTENSION(filepath, ".svg")) {
+        type = "text/xml";
+    }
+    return httpd_resp_set_type(req, type);
+}
+
+
+/* Send HTTP response with the contents of the requested file */
+static esp_err_t rest_common_get_handler(httpd_req_t *req)
+{
+    char filepath[FILE_PATH_MAX];
+
+    strlcpy(filepath, "/www", sizeof(filepath));
+    if (req->uri[strlen(req->uri) - 1] == '/') {
+        strlcat(filepath, "/index.html", sizeof(filepath));
+    } else {
+        strlcat(filepath, req->uri, sizeof(filepath));
+    }
+    int fd = open(filepath, O_RDONLY, 0);
+    if (fd == -1) {
+        ESP_LOGE(TAG, "Failed to open file : %s", filepath);
+        /* Respond with 500 Internal Server Error */
+        httpd_resp_send_err(req, HTTPD_500_INTERNAL_SERVER_ERROR, "Failed to read existing file");
+        return ESP_FAIL;
+    }
+
+    set_content_type_from_file(req, filepath);
+
+    char *chunk = scratch;
+    ssize_t read_bytes;
+    do {
+        /* Read file in chunks into the scratch buffer */
+        read_bytes = read(fd, chunk, SCRATCH_BUFSIZE);
+        if (read_bytes == -1) {
+            ESP_LOGE(TAG, "Failed to read file : %s", filepath);
+        } else if (read_bytes > 0) {
+            /* Send the buffer contents as HTTP response chunk */
+            if (httpd_resp_send_chunk(req, chunk, read_bytes) != ESP_OK) {
+                close(fd);
+                ESP_LOGE(TAG, "File sending failed!");
+                /* Abort sending file */
+                httpd_resp_sendstr_chunk(req, NULL);
+                /* Respond with 500 Internal Server Error */
+                httpd_resp_send_err(req, HTTPD_500_INTERNAL_SERVER_ERROR, "Failed to send file");
+                return ESP_FAIL;
+            }
+        }
+    } while (read_bytes > 0);
+    /* Close file after sending complete */
+    close(fd);
+    ESP_LOGI(TAG, "File sending complete");
+    /* Respond with an empty chunk to signal HTTP response completion */
+    httpd_resp_send_chunk(req, NULL, 0);
+    return ESP_OK;
+}
+
+
 httpd_handle_t start_webserver(void)
 {
     httpd_handle_t server = NULL;
     httpd_config_t config = HTTPD_DEFAULT_CONFIG();
     config.lru_purge_enable = true;
+    config.uri_match_fn = httpd_uri_match_wildcard;
 
     // Start the httpd server
     ESP_LOGI(TAG, "Starting server on port: '%d'", config.server_port);
-    if (httpd_start(&server, &config) == ESP_OK) {
-        // Set URI handlers
-        ESP_LOGI(TAG, "Registering URI handlers");
-        httpd_register_uri_handler(server, &hello);
-        httpd_register_uri_handler(server, &echo);
-        #if CONFIG_EXAMPLE_BASIC_AUTH
-        httpd_register_basic_auth(server);
-        #endif
-        return server;
+
+    if (httpd_start(&server, &config) != ESP_OK) {
+        ESP_LOGI(TAG, "Error starting server!");
+        return NULL;
     }
 
-    ESP_LOGI(TAG, "Error starting server!");
-    return NULL;
+    // Set URI handlers
+    ESP_LOGI(TAG, "Registering URI handlers");
+    httpd_register_uri_handler(server, &hello);
+    httpd_register_uri_handler(server, &echo);
+#if CONFIG_EXAMPLE_BASIC_AUTH
+    httpd_register_basic_auth(server);
+#endif
+
+    /* URI handler for getting web server files */
+    httpd_uri_t common_get_uri = {
+        .uri = "/*",
+        .method = HTTP_GET,
+        .handler = rest_common_get_handler,
+        .user_ctx = NULL
+    };
+    httpd_register_uri_handler(server, &common_get_uri);
+
+    return server;
 }
 
 esp_err_t stop_webserver(httpd_handle_t server)
