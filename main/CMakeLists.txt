@@ -4,7 +4,11 @@ idf_component_register(
 		"my_httpd.c"
 		"drv8833_pwm.c"
 		"my_wifi.c"
-	INCLUDE_DIRS ".")
+		"i2s_std.c"
+	INCLUDE_DIRS "."
+	EMBED_FILES 
+		"gun_s16_16k_mono.pcm"
+		"didi_s16_16k_mono.pcm")
 
 set(WEB_SRC_DIR "${CMAKE_CURRENT_SOURCE_DIR}/../web")
 if(EXISTS ${WEB_SRC_DIR}/dist)

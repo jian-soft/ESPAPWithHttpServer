@@ -56,7 +56,7 @@ esp_err_t init_fs(void)
 }
 
 
-
+extern void test_i2s();
 void app_main(void)
 {
     wifi_init_softap();
@@ -66,6 +66,7 @@ void app_main(void)
 
     drv8833_enable();
 
+    test_i2s();
     //起一个task, 5s反转一下GPIO4的电平
     ///int cnt = 0;
     //while(1) {
