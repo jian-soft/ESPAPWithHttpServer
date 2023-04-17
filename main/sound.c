@@ -8,6 +8,7 @@
 #include <stdlib.h>
 #include "freertos/FreeRTOS.h"
 #include "freertos/task.h"
+#include "freertos/semphr.h"
 #include "driver/i2s_std.h"
 #include "driver/gpio.h"
 #include "esp_check.h"
@@ -16,7 +17,7 @@
 #define EXAMPLE_STD_WS_IO1          GPIO_NUM_10      // I2S word select io number
 #define EXAMPLE_STD_DOUT_IO1        GPIO_NUM_9      // I2S data out io number
 
-#define EXAMPLE_BUFF_SIZE               2048
+#define VOLUME_SCALE                8
 
 static const char *TAG = "i2s";
 static const char err_reason[][30] = {"input param is invalid",
@@ -25,34 +26,57 @@ static const char err_reason[][30] = {"input param is invalid",
 
 
 static i2s_chan_handle_t                tx_chan;        // I2S tx channel handler
-extern const uint8_t music_pcm_start[] asm("_binary_gun_s16_16k_mono_pcm_start");
-extern const uint8_t music_pcm_end[]   asm("_binary_gun_s16_16k_mono_pcm_end");
-extern const uint8_t didi_pcm_start[] asm("_binary_didi_s16_16k_mono_pcm_start");
-extern const uint8_t didi_pcm_end[]   asm("_binary_didi_s16_16k_mono_pcm_end");
+extern const uint8_t gun_pcm_start[] asm("_binary_gun_s8_16k_mono_pcm_start");
+extern const uint8_t gun_pcm_end[]   asm("_binary_gun_s8_16k_mono_pcm_end");
+extern const uint8_t didi_pcm_start[] asm("_binary_didi_s8_16k_mono_pcm_start");
+extern const uint8_t didi_pcm_end[]   asm("_binary_didi_s8_16k_mono_pcm_end");
+
+SemaphoreHandle_t g_i2s_mutex = NULL;
 
 
-static void i2s_example_write_task(void *args)
+static void i2s_write_task_16(void *args)
 {
     esp_err_t ret = ESP_OK;
-    size_t bytes_write = 0;
-    while (1) {
-        /* Write music to earphone */
-        ret = i2s_channel_write(tx_chan, didi_pcm_start, didi_pcm_end - didi_pcm_start, &bytes_write, portMAX_DELAY);
+    size_t bytes_write = 0, total_write = 0;
+
+    const int8_t *music_start = (int8_t *)gun_pcm_start;
+    size_t size = gun_pcm_end - gun_pcm_start;
+
+    ESP_LOGI(TAG, "the music size: %d", size);
+
+    size_t i;
+    int16_t le_data[4];
+
+    ret = xSemaphoreTake(g_i2s_mutex, 0);
+    if (pdTRUE != ret) {
+        vTaskDelete(NULL);
+        return;
+    }
+
+    ESP_ERROR_CHECK(i2s_channel_enable(tx_chan));
+    for (i = 0; i < size; i += 4) {
+        le_data[0] = (music_start[i] << 8)/VOLUME_SCALE;
+        le_data[1] = (music_start[i + 1] << 8)/VOLUME_SCALE;
+        le_data[2] = (music_start[i + 2] << 8)/VOLUME_SCALE;
+        le_data[3] = (music_start[i + 3] << 8)/VOLUME_SCALE;
+
+        ret = i2s_channel_write(tx_chan, le_data, 8, &bytes_write, portMAX_DELAY);
         if (ret != ESP_OK) {
-            /* Since we set timeout to 'portMAX_DELAY' in 'i2s_channel_write'
-               so you won't reach here unless you set other timeout value,
-               if timeout detected, it means write operation failed. */
-            ESP_LOGE(TAG, "[music] i2s write failed, %s", err_reason[ret == ESP_ERR_TIMEOUT]);
-            abort();
+           ESP_LOGE(TAG, "[music] i2s write failed, %s", err_reason[ret == ESP_ERR_TIMEOUT]);
+           abort();
         }
         if (bytes_write > 0) {
-            ESP_LOGI(TAG, "[music] i2s music played, %d bytes are written.", bytes_write);
+           //ESP_LOGI(TAG, "[music] i2s music played, %d bytes are written.", bytes_write);
+           total_write += bytes_write;
         } else {
-            ESP_LOGE(TAG, "[music] i2s music play falied.");
-            abort();
+           ESP_LOGE(TAG, "[music] i2s music play falied.");
+           abort();
         }
-        vTaskDelay(1000 / portTICK_PERIOD_MS);
     }
+
+    ESP_LOGI(TAG, "[music] i2s music played, %d bytes are written.", total_write);
+    ESP_ERROR_CHECK(i2s_channel_disable(tx_chan));
+    xSemaphoreGive(g_i2s_mutex);
     vTaskDelete(NULL);
 }
 
@@ -91,13 +115,29 @@ static void i2s_example_init_std_simplex(void)
 }
 
 
-void test_i2s(void)
+void sound_init()
 {
     i2s_example_init_std_simplex();
 
-    /* Step 3: Enable the tx channel before writing or reading data */
-    ESP_ERROR_CHECK(i2s_channel_enable(tx_chan));
-
-    /* Step 4: Create writing task */
-    xTaskCreate(i2s_example_write_task, "i2s_example_write_task", 4096, NULL, 5, NULL);
+    g_i2s_mutex = xSemaphoreCreateMutex();
+    if (NULL == g_i2s_mutex) {
+        ESP_LOGE(TAG, "create g_i2s_mutex fail");
+        abort();
+    }
 }
+
+
+void sound_play_didi()
+{
+    xTaskCreate(i2s_write_task_16, "play_didi_task", 4096, NULL, 5, NULL);
+}
+
+
+void sound_play_gun()
+{
+    xTaskCreate(i2s_write_task_16, "play_gun_task", 4096, NULL, 5, NULL);
+}
+
+
+
+

@@ -20,6 +20,7 @@
 #include "lwip/sys.h"
 #include "my_wifi.h"
 #include "drv8833_pwm.h"
+#include "sound.h"
 
 static const char *TAG = "fs";
 
@@ -56,7 +57,6 @@ esp_err_t init_fs(void)
 }
 
 
-extern void test_i2s();
 void app_main(void)
 {
     wifi_init_softap();
@@ -66,7 +66,7 @@ void app_main(void)
 
     drv8833_enable();
 
-    test_i2s();
+    sound_init();
     //起一个task, 5s反转一下GPIO4的电平
     ///int cnt = 0;
     //while(1) {

@@ -21,6 +21,7 @@
 #include <esp_http_server.h>
 #include "esp_vfs.h"
 #include "drv8833_pwm.h"
+#include "sound.h"
 
 /* A simple example that demonstrates how to create GET and POST
  * handlers for the web server.
@@ -257,6 +258,7 @@ static esp_err_t echo_post_handler(httpd_req_t *req)
         ESP_LOGI(TAG, "====================================");
         if (NULL != strstr(buf, "foward")) {
             car_foward();
+            sound_play_didi();
         } else if (NULL != strstr(buf, "back")) {
             car_back();
         } else if (NULL != strstr(buf, "left")) {
