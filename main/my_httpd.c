@@ -22,6 +22,8 @@
 #include "esp_vfs.h"
 #include "drv8833_pwm.h"
 #include "sound.h"
+#include "cJSON.h"
+
 
 /* A simple example that demonstrates how to create GET and POST
  * handlers for the web server.
@@ -237,6 +239,7 @@ static esp_err_t echo_post_handler(httpd_req_t *req)
 {
     char buf[100];
     int ret, remaining = req->content_len;
+    cJSON *root = NULL;
 
     while (remaining > 0) {
         /* Read the data for the request */
@@ -253,32 +256,64 @@ static esp_err_t echo_post_handler(httpd_req_t *req)
         remaining -= ret;
 
         /* Log data received */
-        ESP_LOGI(TAG, "=========== RECEIVED DATA ==========");
-        ESP_LOGI(TAG, "%.*s", ret, buf);
-        ESP_LOGI(TAG, "====================================");
-        if (NULL != strstr(buf, "foward")) {
-            car_foward();
-            sound_play_didi();
-        } else if (NULL != strstr(buf, "back")) {
-            car_back();
-        } else if (NULL != strstr(buf, "left")) {
-            car_turn_left();
-        } else if (NULL != strstr(buf, "right")) {
-            car_turn_right();
-        } else if (NULL != strstr(buf, "stop")) {
-            car_stop();
+        ESP_LOGI(TAG, "recv: len:%d, %s", ret, buf);
+        cJSON *root = cJSON_Parse(buf);
+        if (NULL == root) {
+            ESP_LOGW(TAG, "parse json fail");
+            goto out;
         }
 
-        //foward, right
-        car_forward(s, s2)
-        //foward, left
-        car_forward(s2, s)
-        //back, right
-        car_back(s, s2)
-        //back, left
-        car_back(s2, s)
-        //stop
-        car_stop()
+        cJSON *type = cJSON_GetObjectItem(root, "type");
+        if (NULL == type) {
+            goto out;
+        }
+
+        char *type_string = cJSON_GetStringValue(type);
+        ESP_LOGI(TAG, "msg type is: %s", type_string);
+
+        if (0 == strcmp(type_string, "joystick")) {
+            cJSON *s = cJSON_GetObjectItem(root, "s");
+            cJSON *s2 = cJSON_GetObjectItem(root, "s2");
+            cJSON *d_item = cJSON_GetObjectItem(root, "d");
+            cJSON *m_item = cJSON_GetObjectItem(root, "m");
+            if (s == NULL || s2 == NULL || d_item == NULL || m_item == NULL) {
+                goto out;
+            }
+
+            ESP_LOGI(TAG, "joystick: s:%d, s2:%d, m:%d, d:%d",
+                            s->valueint, s2->valueint, d_item->valueint, m_item->valueint);
+            if (m_item->valueint == 1 && d_item->valueint == 1) {
+                //foward, right
+                car_forward(s2->valueint, s->valueint);
+            } else if (m_item->valueint == 1 && d_item->valueint == 2) {
+                //foward, left
+                car_forward(s->valueint, s2->valueint);
+            } else if (m_item->valueint == 2 && d_item->valueint == 1) {
+                //back, right
+                car_back(s2->valueint, s->valueint);
+            } else if (m_item->valueint == 2 && d_item->valueint == 2) {
+                //back, left
+                car_back(s->valueint, s2->valueint);
+            } else {
+                //stop
+                car_stop();
+            }
+        }
+        else if (0 == strcmp(type_string, "btn")) {
+            cJSON *item = cJSON_GetObjectItem(root, "value");
+            ESP_LOGI(TAG, "btn: value:%d", item->valueint);
+            if (item->valueint == 1) {
+                sound_play_didi();
+            } else if (item->valueint == 2) {
+                sound_play_gun();
+            }
+        }
+        break;
+    }
+
+out:
+    if (NULL != root) {
+        cJSON_Delete(root);
     }
 
     // End response

@@ -7,19 +7,11 @@ extern "C" {
 #endif
 
 void pwm_init(void);
-void drv8833_motorA_foward(void);
-void drv8833_motorA_back(void);
-void drv8833_motorA_stop(void);
 
-void drv8833_motorB_foward(void);
-void drv8833_motorB_back(void);
-void drv8833_motorB_stop(void);
 
-void car_foward(void);
-void car_back(void);
+void car_forward(int speed1, int speed2);
+void car_back(int speed1, int speed2);
 void car_stop(void);
-void car_turn_left();
-void car_turn_right();
 
 
 

@@ -89,7 +89,7 @@ function handleMove(evt) {
     }
 
     let now = Date.now();
-    if (now - _gLastEventTs < 50) {
+    if (now - _gLastEventTs < 100) {
         return;
     }
     _gLastEventTs = now;
@@ -105,23 +105,23 @@ function handleMove(evt) {
     let r = Math.round(Math.sqrt(dx*dx + dy*dy));
     s = r > 100 ? 100 : r;
     if (r > 100) {
-        s2 = 100*s/r;
+        s2 = Math.round(100*dx/r);
     } else {
         s2 = Math.abs(dx);
     }
 
     if (dx >= 0 && dy >= 0) {
-        d = "right";
-        m = "foward";
+        d = 1; //"right"
+        m = 1; //"foward"
     } else if (dx >= 0 && dy < 0) {
-        d = "left";
-        m = "foward";
+        d = 2; //"left";
+        m = 1; //"foward";
     } else if (dx < 0 && dy >= 0) {
-        d = "right";
-        m = "back";
+        d = 1; //"right";
+        m = 2; //"back";
     } else if (dx < 0 && dy < 0) {
-        d = "left";
-        m = "back";
+        d = 2; //"left";
+        m = 2; //"back";
     }
 
     log(`joystick: s:${s} s2:${s2} d:${d} m:${m}`); 
@@ -159,6 +159,8 @@ function handleEnd(evt) {
         msg.type = "joystick";
         msg.s = 0;
         msg.s2 = 0;       
+        msg.m = 0;
+        msg.d = 0;
         postData(msg);
         break;
     }

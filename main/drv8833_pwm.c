@@ -95,7 +95,8 @@ static void __drv8833_disable(void)
 /* @speed: 0~100 @direction: >=0-foward -1-back */
 void drv8833_motorA_run(int speed, int direction)
 {
-    int duty = speed*100/1024;
+    //if (speed < 25) speed = 25;
+    int duty = speed*1024/100;
     if (direction >= 0) {
         ESP_ERROR_CHECK(ledc_set_duty(LEDC_LOW_SPEED_MODE, LEDC_CHANNEL_0, duty));
         ESP_ERROR_CHECK(ledc_set_duty(LEDC_LOW_SPEED_MODE, LEDC_CHANNEL_1, 0));
@@ -120,7 +121,7 @@ void drv8833_motorA_stop(void)
 
 void drv8833_motorB_run(int speed, int direction)
 {
-    int duty = speed*100/1024;
+    int duty = speed*1024/100;
     if (direction >= 0) {
         ESP_ERROR_CHECK(ledc_set_duty(LEDC_LOW_SPEED_MODE, LEDC_CHANNEL_2, duty));
         ESP_ERROR_CHECK(ledc_set_duty(LEDC_LOW_SPEED_MODE, LEDC_CHANNEL_3, 0));
