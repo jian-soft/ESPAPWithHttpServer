@@ -1,59 +1,47 @@
-<!DOCTYPE html>
-<html>
-<head>
-    <meta charset="UTF-8">
-    <title>炫酷小车</title>
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1, user-scalable=0">
+    <title>canvas demo</title>
     <style>
-    .size {width:150px;height:70px;}
-    .up {position:fixed; left:90px; top:10px}
-    .down {position:fixed; left: 90px; top:170px}
-    .left {position:fixed; left: 10px; top:90px}
-    .right {position:fixed; left: 170px; top:90px}
-    * {
+	  * {
         -webkit-touch-callout:none;
         -webkit-user-select:none;
         -khtml-user-select:none;
         -moz-user-select:none;
         -ms-user-select:none;
         user-select:none;
-    }
+      }
+      #log {
+        height: 200px;
+        width: 600px;
+        overflow: scroll;
+      }
+	  .button {
+		/*margin-right: 100px;*/
+		margin-top: 20px;
+		margin-bottom: 20px;
+		margin-left: 100px;
+		width: 70px;
+ 		height: 40px;
+		transform: rotate(0.25turn)
+	  }
     </style>
-</head>
-<body>
-    <button class="size up" ontouchstart="onArrowDown('foward')" ontouchend="onArrowUp('foward')">上</button>
-    <button class="size down" ontouchstart="onArrowDown('back')" ontouchend="onArrowUp('back')">下</button>
-    <button class="size left" ontouchstart="onArrowDown('left')" ontouchend="onArrowUp('left')">左</button>
-    <button class="size right" ontouchstart="onArrowDown('right')" ontouchend="onArrowUp('right')">右</button>
-<script>
-    window.oncontextmenu=function(e){
+  </head>
+  <body>
+    <div><canvas id="canvas" style="border:solid black 1px;"></canvas><div>
+	<div><button id="btn1" class="button">打枪</button></div>
+	<div><button id="btn2" class="button">滴滴</button></div>
+    <br />
+    Log:
+    <pre id="log" style="border: 1px solid #ccc;"></pre>
+	<script>
+	  window.oncontextmenu=function(e){
         e.preventDefault();
-    };
-    function onArrowDown(direction) {
-        console.log(direction)
-        const data = {key: direction}
-        postData(data)
-    }
-    function onArrowUp(direction) {
-        const data = {key: "stop"}
-        postData(data)
-    }
-
-    function postData(data) {
-        fetch("/echo", {
-            method: "POST", // or 'PUT'
-            headers: {
-                "Content-Type": "application/json",
-            },
-            body: JSON.stringify(data),
-            })
-            .then((response) => response.text())
-            .then((data) => {
-                console.log("Success:", data);
-            })
-            .catch((error) => {
-                console.error("Error:", error);
-            });
-    }
-</script>
-</body>
+      };
+	</script>
+    <script src="HttpPost.js"></script>
+    <script src="ControlPanel.js"></script>
+  </body>
 </html>
