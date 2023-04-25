@@ -268,6 +268,17 @@ static esp_err_t echo_post_handler(httpd_req_t *req)
         } else if (NULL != strstr(buf, "stop")) {
             car_stop();
         }
+
+        //foward, right
+        car_forward(s, s2)
+        //foward, left
+        car_forward(s2, s)
+        //back, right
+        car_back(s, s2)
+        //back, left
+        car_back(s2, s)
+        //stop
+        car_stop()
     }
 
     // End response

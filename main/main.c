@@ -64,7 +64,6 @@ void app_main(void)
     pwm_init();
     init_fs();
 
-    drv8833_enable();
 
     sound_init();
     //起一个task, 5s反转一下GPIO4的电平

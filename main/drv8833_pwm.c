@@ -83,29 +83,33 @@ void pwm_init(void)
     }
 }
 
-void drv8833_enable(void)
+static void __drv8833_enable(void)
 {
     gpio_set_level(DRV8833_ENABLE_IO, 1);
 }
-void drv8833_disable(void)
+static void __drv8833_disable(void)
 {
     gpio_set_level(DRV8833_ENABLE_IO, 0);
 }
 
-void drv8833_motorA_foward(void)
+/* @speed: 0~100 @direction: >=0-foward -1-back */
+void drv8833_motorA_run(int speed, int direction)
 {
-    ESP_ERROR_CHECK(ledc_set_duty(LEDC_LOW_SPEED_MODE, LEDC_CHANNEL_0, 1024));
-    ESP_ERROR_CHECK(ledc_set_duty(LEDC_LOW_SPEED_MODE, LEDC_CHANNEL_1, 0));
+    int duty = speed*100/1024;
+    if (direction >= 0) {
+        ESP_ERROR_CHECK(ledc_set_duty(LEDC_LOW_SPEED_MODE, LEDC_CHANNEL_0, duty));
+        ESP_ERROR_CHECK(ledc_set_duty(LEDC_LOW_SPEED_MODE, LEDC_CHANNEL_1, 0));
+    } else {
+        ESP_ERROR_CHECK(ledc_set_duty(LEDC_LOW_SPEED_MODE, LEDC_CHANNEL_0, 0));
+        ESP_ERROR_CHECK(ledc_set_duty(LEDC_LOW_SPEED_MODE, LEDC_CHANNEL_1, duty));
+
+    }
+
     ESP_ERROR_CHECK(ledc_update_duty(LEDC_LOW_SPEED_MODE, LEDC_CHANNEL_0));
     ESP_ERROR_CHECK(ledc_update_duty(LEDC_LOW_SPEED_MODE, LEDC_CHANNEL_1));
 }
-void drv8833_motorA_back(void)
-{
-    ESP_ERROR_CHECK(ledc_set_duty(LEDC_LOW_SPEED_MODE, LEDC_CHANNEL_0, 0));
-    ESP_ERROR_CHECK(ledc_set_duty(LEDC_LOW_SPEED_MODE, LEDC_CHANNEL_1, 1024));
-    ESP_ERROR_CHECK(ledc_update_duty(LEDC_LOW_SPEED_MODE, LEDC_CHANNEL_0));
-    ESP_ERROR_CHECK(ledc_update_duty(LEDC_LOW_SPEED_MODE, LEDC_CHANNEL_1));
-}
+
+
 void drv8833_motorA_stop(void)
 {
     ESP_ERROR_CHECK(ledc_set_duty(LEDC_LOW_SPEED_MODE, LEDC_CHANNEL_0, 1024));
@@ -114,17 +118,18 @@ void drv8833_motorA_stop(void)
     ESP_ERROR_CHECK(ledc_update_duty(LEDC_LOW_SPEED_MODE, LEDC_CHANNEL_1));
 }
 
-void drv8833_motorB_foward(void)
+void drv8833_motorB_run(int speed, int direction)
 {
-    ESP_ERROR_CHECK(ledc_set_duty(LEDC_LOW_SPEED_MODE, LEDC_CHANNEL_2, 1024));
-    ESP_ERROR_CHECK(ledc_set_duty(LEDC_LOW_SPEED_MODE, LEDC_CHANNEL_3, 0));
-    ESP_ERROR_CHECK(ledc_update_duty(LEDC_LOW_SPEED_MODE, LEDC_CHANNEL_2));
-    ESP_ERROR_CHECK(ledc_update_duty(LEDC_LOW_SPEED_MODE, LEDC_CHANNEL_3));
-}
-void drv8833_motorB_back(void)
-{
-    ESP_ERROR_CHECK(ledc_set_duty(LEDC_LOW_SPEED_MODE, LEDC_CHANNEL_2, 0));
-    ESP_ERROR_CHECK(ledc_set_duty(LEDC_LOW_SPEED_MODE, LEDC_CHANNEL_3, 1024));
+    int duty = speed*100/1024;
+    if (direction >= 0) {
+        ESP_ERROR_CHECK(ledc_set_duty(LEDC_LOW_SPEED_MODE, LEDC_CHANNEL_2, duty));
+        ESP_ERROR_CHECK(ledc_set_duty(LEDC_LOW_SPEED_MODE, LEDC_CHANNEL_3, 0));
+    } else {
+        ESP_ERROR_CHECK(ledc_set_duty(LEDC_LOW_SPEED_MODE, LEDC_CHANNEL_2, 0));
+        ESP_ERROR_CHECK(ledc_set_duty(LEDC_LOW_SPEED_MODE, LEDC_CHANNEL_3, duty));
+
+    }
+
     ESP_ERROR_CHECK(ledc_update_duty(LEDC_LOW_SPEED_MODE, LEDC_CHANNEL_2));
     ESP_ERROR_CHECK(ledc_update_duty(LEDC_LOW_SPEED_MODE, LEDC_CHANNEL_3));
 }
@@ -137,33 +142,26 @@ void drv8833_motorB_stop(void)
     ESP_ERROR_CHECK(ledc_update_duty(LEDC_LOW_SPEED_MODE, LEDC_CHANNEL_3));
 }
 
-void car_foward(void)
+void car_forward(int speed1, int speed2)
 {
-    drv8833_motorA_foward();
-    drv8833_motorB_foward();
+    __drv8833_enable();
+    drv8833_motorA_run(speed1, 1);
+    drv8833_motorB_run(speed2, 1);
 }
 
-void car_back(void)
+void car_back(int speed1, int speed2)
 {
-    drv8833_motorA_back();
-    drv8833_motorB_back();
+    __drv8833_enable();
+    drv8833_motorA_run(speed1, -1);
+    drv8833_motorB_run(speed2, -1);
 }
+
 
 void car_stop(void)
 {
     drv8833_motorA_stop();
     drv8833_motorB_stop();
+    __drv8833_disable();
 }
 
-void car_turn_left()
-{
-    drv8833_motorA_foward();
-    drv8833_motorB_back();
-}
-
-void car_turn_right()
-{
-    drv8833_motorA_back();
-    drv8833_motorB_foward();
-}
 

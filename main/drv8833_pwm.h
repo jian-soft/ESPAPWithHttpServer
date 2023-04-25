@@ -7,8 +7,6 @@ extern "C" {
 #endif
 
 void pwm_init(void);
-void drv8833_enable(void);
-void drv8833_disable(void);
 void drv8833_motorA_foward(void);
 void drv8833_motorA_back(void);
 void drv8833_motorA_stop(void);
