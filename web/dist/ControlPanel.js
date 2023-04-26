@@ -1,11 +1,10 @@
 const gW = window.innerWidth;
 const gH = window.innerHeight;
-const canvasW = gW/2;
+const canvasW = gW*2/3;
 const canvasH = gH/2;
 const gRadius = canvasW/2;
 const gCanvas = document.getElementById("canvas");
 const gCtx = gCanvas.getContext("2d");
-const ongoingTouches = [];
 const firstTouch = {}
 
 console.log("width:" + gW + " height:" + gH)
@@ -66,8 +65,8 @@ function handleStart(evt) {
     evt.preventDefault();
     const ctx = gCanvas.getContext("2d");
     const touches = evt.changedTouches;
-    log(`touch start, touch num:${touches.length}, first touch's id is:${touches[0].identifier}`);
-
+    //log(`touch start, touch num:${touches.length}, first touch's id is:${touches[0].identifier}`);
+    log(`touch start`);
     firstTouch.identifier = touches[0].identifier;
     firstTouch.pageX = touches[0].pageX;
     firstTouch.pageY = touches[0].pageY;
@@ -110,6 +109,13 @@ function handleMove(evt) {
         s2 = Math.abs(dx);
     }
 
+    //tuning turning feeling
+    if (s2 < 95) {
+        s2 -= 45; 
+        if (s2 < 0) s2 = 0;
+    }
+
+
     if (dx >= 0 && dy >= 0) {
         d = 1; //"right"
         m = 1; //"foward"
@@ -124,7 +130,7 @@ function handleMove(evt) {
         m = 2; //"back";
     }
 
-    log(`joystick: s:${s} s2:${s2} d:${d} m:${m}`); 
+    //log(`joystick: s:${s} s2:${s2} d:${d} m:${m}`); 
     clearCanvas();
     gCtx.beginPath();
     gCtx.moveTo(canvasW/2, canvasW/2);

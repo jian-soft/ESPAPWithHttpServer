@@ -39,8 +39,13 @@ static void i2s_write_task_16(void *args)
     esp_err_t ret = ESP_OK;
     size_t bytes_write = 0, total_write = 0;
 
-    const int8_t *music_start = (int8_t *)gun_pcm_start;
-    size_t size = gun_pcm_end - gun_pcm_start;
+    const int8_t *music_start = (int8_t *)args;
+    size_t size;
+    if (music_start == didi_pcm_start) {
+        size = didi_pcm_end - didi_pcm_start;
+    } else {
+        size = gun_pcm_end - gun_pcm_start;
+    }
 
     ESP_LOGI(TAG, "the music size: %d", size);
 
@@ -114,7 +119,6 @@ static void i2s_example_init_std_simplex(void)
     ESP_ERROR_CHECK(i2s_channel_init_std_mode(tx_chan, &tx_std_cfg));
 }
 
-
 void sound_init()
 {
     i2s_example_init_std_simplex();
@@ -126,18 +130,14 @@ void sound_init()
     }
 }
 
-
 void sound_play_didi()
 {
-    xTaskCreate(i2s_write_task_16, "play_didi_task", 4096, NULL, 5, NULL);
+    xTaskCreate(i2s_write_task_16, "play_didi_task", 4096, didi_pcm_start, 5, NULL);
 }
-
 
 void sound_play_gun()
 {
-    xTaskCreate(i2s_write_task_16, "play_gun_task", 4096, NULL, 5, NULL);
+    xTaskCreate(i2s_write_task_16, "play_gun_task", 4096, gun_pcm_start, 5, NULL);
 }
-
-
 
 
