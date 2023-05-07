@@ -18,16 +18,38 @@ document.addEventListener("DOMContentLoaded", startup);
 function clearCanvas() {
     gCtx.clearRect(0, 0, canvasW, canvasW);
 
-	gCtx.beginPath();
-    gCtx.arc(canvasW/2, canvasW/2, 3, 0, 2 * Math.PI, false); // a circle
-    gCtx.fillStyle = "#FF0000";
-    gCtx.fill();
-
     gCtx.beginPath();
     gCtx.arc(canvasW/2, canvasW/2, gRadius, 0, 2 * Math.PI, false); // a circle
     gCtx.strokeStyle = "#FF0000"
-    gCtx.lineWidth = 4;
+    gCtx.lineWidth = 1;
     gCtx.stroke();
+
+    gCtx.beginPath();
+    gCtx.moveTo(canvasW/2, 0);
+    gCtx.lineTo(canvasW/2, canvasW);
+    gCtx.strokeStyle = "#888888";
+    gCtx.stroke();
+
+    gCtx.beginPath();
+    gCtx.moveTo(gRadius + gRadius*Math.cos(Math.PI/3), gRadius - gRadius*Math.sin(Math.PI/3));
+    gCtx.lineTo(gRadius - gRadius*Math.cos(Math.PI/3), gRadius + gRadius*Math.sin(Math.PI/3));
+    gCtx.stroke();
+
+    gCtx.beginPath();
+    gCtx.moveTo(gRadius + gRadius*Math.cos(Math.PI/6), gRadius - gRadius*Math.sin(Math.PI/6));
+    gCtx.lineTo(gRadius - gRadius*Math.cos(Math.PI/6), gRadius + gRadius*Math.sin(Math.PI/6));
+    gCtx.stroke();
+
+    gCtx.beginPath();
+    gCtx.moveTo(gRadius - gRadius*Math.cos(Math.PI/6), gRadius - gRadius*Math.sin(Math.PI/6));
+    gCtx.lineTo(gRadius + gRadius*Math.cos(Math.PI/6), gRadius + gRadius*Math.sin(Math.PI/6));
+    gCtx.stroke();
+
+    gCtx.beginPath();
+    gCtx.moveTo(gRadius - gRadius*Math.cos(Math.PI/3), gRadius - gRadius*Math.sin(Math.PI/3));
+    gCtx.lineTo(gRadius + gRadius*Math.cos(Math.PI/3), gRadius + gRadius*Math.sin(Math.PI/3));
+    gCtx.stroke();
+
 
 }
 
@@ -103,25 +125,22 @@ function handleMove(evt) {
     let dx = Math.round((pageX - gRadius - gMarginTop)/gRadius * 100);
     let dy = Math.round((pageY - gRadius - gMarginTop)/gRadius * 100);
 
+    
+
     let s, s2, d, m;
 
-    let r = Math.round(Math.sqrt(dx*dx + dy*dy));
-    if (r > 100) {
-        s = 100;
-        s2 = Math.abs(Math.round(100*dx/r));
-    } else if (r < 50) {
-        s = 50;
-        s2 = Math.abs(Math.round(50*dx/r));
-    } else {
-        s = r
-        s2 = Math.abs(dx);
-    }
+    let r = Math.sqrt(dx*dx + dy*dy);
 
-    //tuning turning feeling
-    //if (s2 < 95) {
-    //    s2 -= 45; 
-    //    if (s2 < 0) s2 = 0;
-    //}
+    let rad = Math.acos(Math.abs(dx)/r)
+   
+    s = 100;
+    if (rad < Math.PI/6) {
+        s2 = 100;
+    } else if (rad < Math.PI/3) {
+        s2 = 50;
+    } else {
+        s2 = 0;
+    }
 
 
     if (dx >= 0 && dy >= 0) {
