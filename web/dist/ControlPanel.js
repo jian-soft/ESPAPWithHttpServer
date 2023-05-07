@@ -7,6 +7,10 @@ const gCanvas = document.getElementById("canvas");
 const gCtx = gCanvas.getContext("2d");
 const firstTouch = {}
 
+const body = document.getElementsByTagName("body")[0];
+const gMarginTop = parseInt(getComputedStyle(body, null).marginTop);
+log(`marginTop: ${gMarginTop}`);
+
 console.log("width:" + gW + " height:" + gH)
 
 document.addEventListener("DOMContentLoaded", startup);
@@ -96,24 +100,28 @@ function handleMove(evt) {
     const pageX = touches[i].pageX;
     const pageY = touches[i].pageY;
 
-    let dx = Math.round((pageX - gRadius)/gRadius * 100);
-    let dy = Math.round((pageY - gRadius)/gRadius * 100);
+    let dx = Math.round((pageX - gRadius - gMarginTop)/gRadius * 100);
+    let dy = Math.round((pageY - gRadius - gMarginTop)/gRadius * 100);
 
     let s, s2, d, m;
 
     let r = Math.round(Math.sqrt(dx*dx + dy*dy));
-    s = r > 100 ? 100 : r;
     if (r > 100) {
-        s2 = Math.round(100*dx/r);
+        s = 100;
+        s2 = Math.abs(Math.round(100*dx/r));
+    } else if (r < 50) {
+        s = 50;
+        s2 = Math.abs(Math.round(50*dx/r));
     } else {
+        s = r
         s2 = Math.abs(dx);
     }
 
     //tuning turning feeling
-    if (s2 < 95) {
-        s2 -= 45; 
-        if (s2 < 0) s2 = 0;
-    }
+    //if (s2 < 95) {
+    //    s2 -= 45; 
+    //    if (s2 < 0) s2 = 0;
+    //}
 
 
     if (dx >= 0 && dy >= 0) {
@@ -134,7 +142,7 @@ function handleMove(evt) {
     clearCanvas();
     gCtx.beginPath();
     gCtx.moveTo(canvasW/2, canvasW/2);
-    gCtx.lineTo(touches[i].pageX, touches[i].pageY);
+    gCtx.lineTo(pageX - gMarginTop, pageY - gMarginTop);
     gCtx.strokeStyle = "red";
     gCtx.stroke();
     firstTouch.pageX = touches[i].pageX;

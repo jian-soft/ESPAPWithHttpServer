@@ -257,7 +257,7 @@ static esp_err_t echo_post_handler(httpd_req_t *req)
 
         /* Log data received */
         ESP_LOGI(TAG, "recv: len:%d, %s", ret, buf);
-        cJSON *root = cJSON_Parse(buf);
+        root = cJSON_Parse(buf);
         if (NULL == root) {
             ESP_LOGW(TAG, "parse json fail");
             goto out;
@@ -303,9 +303,9 @@ static esp_err_t echo_post_handler(httpd_req_t *req)
             cJSON *item = cJSON_GetObjectItem(root, "value");
             ESP_LOGI(TAG, "btn: value:%d", item->valueint);
             if (item->valueint == 1) {
-                sound_play_didi();
-            } else if (item->valueint == 2) {
                 sound_play_gun();
+            } else if (item->valueint == 2) {
+                sound_play_didi();
             }
         }
         break;
