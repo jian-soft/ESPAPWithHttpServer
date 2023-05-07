@@ -31,26 +31,14 @@ function clearCanvas() {
     gCtx.stroke();
 
     gCtx.beginPath();
-    gCtx.moveTo(gRadius + gRadius*Math.cos(Math.PI/3), gRadius - gRadius*Math.sin(Math.PI/3));
-    gCtx.lineTo(gRadius - gRadius*Math.cos(Math.PI/3), gRadius + gRadius*Math.sin(Math.PI/3));
+    gCtx.moveTo(gRadius + gRadius*Math.cos(Math.PI/4), gRadius - gRadius*Math.sin(Math.PI/4));
+    gCtx.lineTo(gRadius - gRadius*Math.cos(Math.PI/4), gRadius + gRadius*Math.sin(Math.PI/4));
     gCtx.stroke();
 
     gCtx.beginPath();
-    gCtx.moveTo(gRadius + gRadius*Math.cos(Math.PI/6), gRadius - gRadius*Math.sin(Math.PI/6));
-    gCtx.lineTo(gRadius - gRadius*Math.cos(Math.PI/6), gRadius + gRadius*Math.sin(Math.PI/6));
+    gCtx.moveTo(gRadius - gRadius*Math.cos(Math.PI/4), gRadius - gRadius*Math.sin(Math.PI/4));
+    gCtx.lineTo(gRadius + gRadius*Math.cos(Math.PI/4), gRadius + gRadius*Math.sin(Math.PI/4));
     gCtx.stroke();
-
-    gCtx.beginPath();
-    gCtx.moveTo(gRadius - gRadius*Math.cos(Math.PI/6), gRadius - gRadius*Math.sin(Math.PI/6));
-    gCtx.lineTo(gRadius + gRadius*Math.cos(Math.PI/6), gRadius + gRadius*Math.sin(Math.PI/6));
-    gCtx.stroke();
-
-    gCtx.beginPath();
-    gCtx.moveTo(gRadius - gRadius*Math.cos(Math.PI/3), gRadius - gRadius*Math.sin(Math.PI/3));
-    gCtx.lineTo(gRadius + gRadius*Math.cos(Math.PI/3), gRadius + gRadius*Math.sin(Math.PI/3));
-    gCtx.stroke();
-
-
 }
 
 function startup() {
@@ -125,7 +113,6 @@ function handleMove(evt) {
     let dx = Math.round((pageX - gRadius - gMarginTop)/gRadius * 100);
     let dy = Math.round((pageY - gRadius - gMarginTop)/gRadius * 100);
 
-    
 
     let s, s2, d, m;
 
@@ -134,12 +121,10 @@ function handleMove(evt) {
     let rad = Math.acos(Math.abs(dx)/r)
    
     s = 100;
-    if (rad < Math.PI/6) {
+    if (rad < Math.PI/4) {
         s2 = 100;
-    } else if (rad < Math.PI/3) {
-        s2 = 50;
     } else {
-        s2 = 0;
+        s2 = 50;
     }
 
 
