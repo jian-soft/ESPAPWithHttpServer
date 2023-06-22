@@ -13,9 +13,9 @@
 #include "driver/gpio.h"
 #include "esp_check.h"
 
-#define EXAMPLE_STD_BCLK_IO1        GPIO_NUM_2      // I2S bit clock io number
+#define EXAMPLE_STD_BCLK_IO1        GPIO_NUM_9      // I2S bit clock io number
 #define EXAMPLE_STD_WS_IO1          GPIO_NUM_10      // I2S word select io number
-#define EXAMPLE_STD_DOUT_IO1        GPIO_NUM_9      // I2S data out io number
+#define EXAMPLE_STD_DOUT_IO1        GPIO_NUM_8      // I2S data out io number
 
 #define VOLUME_SCALE                8
 

@@ -19,8 +19,11 @@
 #include "lwip/err.h"
 #include "lwip/sys.h"
 #include "my_wifi.h"
+#include "my_gpio.h"
 #include "drv8833_pwm.h"
 #include "sound.h"
+#include "led_strip.h"
+#include "my_adc.h"
 
 static const char *TAG = "fs";
 
@@ -61,16 +64,26 @@ void app_main(void)
 {
     wifi_init_softap();
 
+    gpio_init();
     pwm_init();
     init_fs();
 
-
     sound_init();
-    //起一个task, 5s反转一下GPIO4的电平
-    ///int cnt = 0;
-    //while(1) {
-        //printf("cnt: %d\n", cnt++);
-        //vTaskDelay(1000 / portTICK_PERIOD_MS);
-        //gpio_set_level(GPIO_NUM_4, cnt % 2);
-    //}
+
+    led_strip_init();
+    adc_init();
+
+    adc_run();
+
+
+    //led_chase();
+//    int cnt = 0;
+//    while(1) {
+//
+//        vTaskDelay(2000 / portTICK_PERIOD_MS);
+//        ESP_LOGI(TAG, "cnt: %d", cnt++);
+//        gpio_set_pwrkeyout(cnt % 2);
+//        printf("get gpio20:%d\n", gpio_get_pwrkeyin());
+//    }
+
 }

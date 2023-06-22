@@ -2,9 +2,13 @@ idf_component_register(
 	SRCS
 		"main.c"
 		"my_httpd.c"
+		"my_gpio.c"
 		"drv8833_pwm.c"
 		"my_wifi.c"
 		"sound.c"
+		"led_strip.c"
+		"led_strip_encoder.c"
+		"my_adc.c"
 	INCLUDE_DIRS "."
 	EMBED_FILES
 		"gun_s8_16k_mono.pcm"
