@@ -62,9 +62,13 @@ esp_err_t init_fs(void)
 
 void app_main(void)
 {
+    gpio_init();
+
+    //上电
+    gpio_set_pwrkeyout(1);
+
     wifi_init_softap();
 
-    gpio_init();
     pwm_init();
     init_fs();
 
