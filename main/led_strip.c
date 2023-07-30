@@ -14,7 +14,7 @@
 #define RMT_LED_STRIP_RESOLUTION_HZ 10000000 // 10MHz resolution, 1 tick = 0.1us (led strip needs a high resolution)
 #define RMT_LED_STRIP_GPIO_NUM      2
 
-#define EXAMPLE_LED_NUMBERS         4
+#define EXAMPLE_LED_NUMBERS         8
 #define EXAMPLE_CHASE_SPEED_MS      50
 
 static const char *TAG = "example";
@@ -110,7 +110,7 @@ void led_chase(void)
         .loop_count = 0, // no transfer loop
     };
     while (1) {
-        for (int i = 0; i < 4; i++) {
+        for (int i = 0; i < EXAMPLE_LED_NUMBERS; i++) {
             // Build RGB pixels
             hue = i * 360 / EXAMPLE_LED_NUMBERS + start_rgb;
             led_strip_hsv2rgb(hue, 100, 100, &red, &green, &blue);
@@ -128,3 +128,21 @@ void led_chase(void)
         start_rgb += 60;
     }
 }
+
+void led_on()
+{
+    ESP_LOGI(TAG, "bring on all led");
+    rmt_transmit_config_t tx_config = {
+        .loop_count = 0, // no transfer loop
+    };
+
+    for (int i = 0; i < EXAMPLE_LED_NUMBERS; i++) {
+        led_strip_pixels[i * 3 + 0] = 0x9;
+        led_strip_pixels[i * 3 + 1] = 0x9;
+        led_strip_pixels[i * 3 + 2] = 0x9;
+    }
+
+    ESP_ERROR_CHECK(rmt_transmit(led_chan, led_encoder, led_strip_pixels, sizeof(led_strip_pixels), &tx_config));
+}
+
+

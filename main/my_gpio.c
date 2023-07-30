@@ -5,8 +5,8 @@
 //static const char *TAG = "pwm";
 
 #define DRV8833_ENABLE_IO   GPIO_NUM_3
-#define PWRKEYOUT           GPIO_NUM_21
-#define PWRKEYIN            GPIO_NUM_20
+#define PWRKEYOUT           GPIO_NUM_20
+#define PWRKEYIN            GPIO_NUM_21
 #define GPIO_OUTPUT_PIN_SEL ((1ULL<<DRV8833_ENABLE_IO) | (1<<PWRKEYOUT))
 #define GPIO_INPUT_PIN_SEL  (1ULL<<PWRKEYIN)
 

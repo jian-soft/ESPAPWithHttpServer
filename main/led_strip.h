@@ -8,6 +8,7 @@ extern "C" {
 
 void led_strip_init(void);
 void led_chase(void);
+void led_on();
 
 
 

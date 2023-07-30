@@ -75,19 +75,21 @@ void app_main(void)
     sound_init();
 
     led_strip_init();
+    led_on();
     adc_init();
 
-    adc_run();
+    //adc_run();
 
 
     //led_chase();
 //    int cnt = 0;
-//    while(1) {
-//
-//        vTaskDelay(2000 / portTICK_PERIOD_MS);
-//        ESP_LOGI(TAG, "cnt: %d", cnt++);
-//        gpio_set_pwrkeyout(cnt % 2);
-//        printf("get gpio20:%d\n", gpio_get_pwrkeyin());
-//    }
+    while(1) {
+        vTaskDelay(2000 / portTICK_PERIOD_MS);
+        int pwrkey = gpio_get_pwrkeyin();
+        ESP_LOGI(TAG, "get gpio21:%d\n", pwrkey);
+        if (pwrkey == 0) {
+            gpio_set_pwrkeyout(0);
+        }
+    }
 
 }
