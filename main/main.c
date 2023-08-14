@@ -62,14 +62,12 @@ esp_err_t init_fs(void)
 
 void app_main(void)
 {
-    gpio_init();
 
-    //上电
-    gpio_set_pwrkeyout(1);
 
     wifi_init_softap();
 
     pwm_init();
+    gpio_init();
     init_fs();
 
     sound_init();
@@ -78,18 +76,14 @@ void app_main(void)
     led_on();
     adc_init();
 
-    //adc_run();
-
 
     //led_chase();
 //    int cnt = 0;
-    while(1) {
-        vTaskDelay(2000 / portTICK_PERIOD_MS);
-        int pwrkey = gpio_get_pwrkeyin();
-        ESP_LOGI(TAG, "get gpio21:%d\n", pwrkey);
-        if (pwrkey == 0) {
-            gpio_set_pwrkeyout(0);
-        }
-    }
+
+    //adc_test();
+    //while(1) {
+    //    vTaskDelay(1000 / portTICK_PERIOD_MS);
+    //    ESP_LOGI(TAG, "m1s:%d, m2s:%d\n", get_m1_cnt(), get_m2_cnt());
+    //}
 
 }

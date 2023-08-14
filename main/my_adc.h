@@ -7,7 +7,9 @@ extern "C" {
 #endif
 
 void adc_init(void);
-void adc_run(void);
+void adc_test();
+int adc_get_voltage();
+void adc_deinit();
 
 
 #ifdef __cplusplus

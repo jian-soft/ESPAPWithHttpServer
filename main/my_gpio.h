@@ -9,13 +9,15 @@ extern "C" {
 void gpio_init(void);
 void gpio_enable_drv8833(void);
 void gpio_disable_drv8833(void);
+void gpio_enable_me6212();
+void gpio_disable_me6212();
 
 
-void gpio_set_pwrkeyout(uint8_t val);
-int gpio_get_pwrkeyin();
-
-
-
+int get_and_clear_m1_cnt();
+int get_and_clear_m2_cnt();
+int get_m1_cnt();
+int get_m2_cnt();
+void run_distance(int distance);
 
 
 #ifdef __cplusplus

@@ -12,12 +12,10 @@
 #include "driver/i2s_std.h"
 #include "driver/gpio.h"
 #include "esp_check.h"
+#include "io_assignment.h"
+#include <math.h>
 
-#define EXAMPLE_STD_BCLK_IO1        GPIO_NUM_9      // I2S bit clock io number
-#define EXAMPLE_STD_WS_IO1          GPIO_NUM_8      // I2S word select io number
-#define EXAMPLE_STD_DOUT_IO1        GPIO_NUM_10      // I2S data out io number
-
-#define VOLUME_SCALE                8
+#define VOLUME_SCALE                1
 
 static const char *TAG = "i2s";
 static const char err_reason[][30] = {"input param is invalid",
@@ -33,6 +31,77 @@ extern const uint8_t didi_pcm_end[]   asm("_binary_didi_s8_16k_mono_pcm_end");
 
 SemaphoreHandle_t g_i2s_mutex = NULL;
 
+#define MY_SR 16000.0
+
+float inv_sr;
+float inv_freq;
+float half_inv_freq;
+static void square_init(float freq)
+{
+    inv_sr = 1.0/MY_SR;
+    inv_freq = 1.0 / (float)freq;
+    half_inv_freq = 0.5 / (float)freq;
+}
+static int16_t square_tick(int idx)
+{
+    float mod;
+    mod = fmod((float)idx * inv_sr, inv_freq);
+
+    if (mod >= half_inv_freq) {
+        return 5000;
+    } else {
+        return -5000;
+    }
+}
+#define BUFF_SIZE 512
+int16_t buffer[BUFF_SIZE];
+static void i2s_task_play_square(void *args)
+{
+    esp_err_t ret = ESP_OK;
+    ret = xSemaphoreTake(g_i2s_mutex, 0);
+    if (pdTRUE != ret) {
+        vTaskDelete(NULL);
+        return;
+    }
+
+    size_t bytes_write = 0, total_write = 0;
+
+    int pitch = (int) args;
+    float freq = 440;
+    float p2f[] = {261.626, 293.665, 329.628, 349.228, 391.995, 440.000, 493.883, 523.251};
+    freq = p2f[pitch];
+    ESP_LOGI(TAG, "i2s_task_play_square: freq:%f", freq);
+    square_init(freq);
+
+    ESP_ERROR_CHECK(i2s_channel_enable(tx_chan));
+    for (int j = 0; j < 16; j++) {
+        for (int i = 0; i < BUFF_SIZE; i ++) {
+            if (j==13 || j == 14 || j == 15) buffer[i] = 0;
+            else buffer[i] = square_tick(i + j*BUFF_SIZE);
+
+        }
+        ret = i2s_channel_write(tx_chan, buffer, BUFF_SIZE*2, &bytes_write, portMAX_DELAY);
+        if (ret != ESP_OK) {
+            ESP_LOGE(TAG, "[music] i2s write failed, %s", err_reason[ret == ESP_ERR_TIMEOUT]);
+            abort();
+        }
+        if (bytes_write > 0) {
+           //ESP_LOGI(TAG, "[music] i2s music played, %d bytes are written.", bytes_write);
+           total_write += bytes_write;
+        } else {
+           ESP_LOGE(TAG, "[music] i2s music play falied.");
+           abort();
+        }
+    }
+
+
+    ESP_LOGI(TAG, "[music] i2s music played, %d bytes are written.", total_write);
+
+    ESP_ERROR_CHECK(i2s_channel_disable(tx_chan));
+    xSemaphoreGive(g_i2s_mutex);
+    vTaskDelete(NULL);
+
+}
 
 static void i2s_write_task_16(void *args)
 {
@@ -105,9 +174,9 @@ static void i2s_example_init_std_simplex(void)
         .slot_cfg = I2S_STD_PHILIPS_SLOT_DEFAULT_CONFIG(I2S_DATA_BIT_WIDTH_16BIT, I2S_SLOT_MODE_MONO),
         .gpio_cfg = {
             .mclk = I2S_GPIO_UNUSED,    // some codecs may require mclk signal, this example doesn't need it
-            .bclk = EXAMPLE_STD_BCLK_IO1,
-            .ws   = EXAMPLE_STD_WS_IO1,
-            .dout = EXAMPLE_STD_DOUT_IO1,
+            .bclk = STD_BCLK_IO,
+            .ws   = STD_WS_IO,
+            .dout = STD_DOUT_IO,
             .din  = I2S_GPIO_UNUSED,
             .invert_flags = {
                 .mclk_inv = false,
@@ -140,4 +209,10 @@ void sound_play_gun()
     xTaskCreate(i2s_write_task_16, "play_gun_task", 4096, (void *)gun_pcm_start, 5, NULL);
 }
 
+void sound_play_square(int pitch)
+{
+    if (pitch < 0 || pitch > 7) return;
+
+    xTaskCreate(i2s_task_play_square, "play_sqr_task", 4096, (void *)pitch, 5, NULL);
+}
 

@@ -13,14 +13,14 @@
 #include "esp_adc/adc_oneshot.h"
 #include "esp_adc/adc_cali.h"
 #include "esp_adc/adc_cali_scheme.h"
+#include "io_assignment.h"
+
 
 const static char *TAG = "EXAMPLE";
 
 /*---------------------------------------------------------------
         ADC General Macros
 ---------------------------------------------------------------*/
-//ADC1 Channels
-#define EXAMPLE_ADC1_CHAN0          ADC_CHANNEL_1
 
 
 static int adc_raw[2][10];
@@ -51,7 +51,28 @@ void adc_init()
     do_calibration1 = example_adc_calibration_init(ADC_UNIT_1, ADC_ATTEN_DB_11, &adc1_cali_handle);
 }
 
-void adc_run(void)
+int adc_get_voltage()
+{
+    ESP_ERROR_CHECK(adc_oneshot_read(adc1_handle, EXAMPLE_ADC1_CHAN0, &adc_raw[0][0]));
+    if (do_calibration1) {
+        ESP_ERROR_CHECK(adc_cali_raw_to_voltage(adc1_cali_handle, adc_raw[0][0], &voltage[0][0]));
+        ESP_LOGI(TAG, "ADC%d Channel[%d] Cali Voltage: %d mV", ADC_UNIT_1 + 1, EXAMPLE_ADC1_CHAN0, voltage[0][0]);
+        return voltage[0][0];
+    }
+
+    return 0;
+}
+
+void adc_deinit()
+{
+    //Tear Down
+    ESP_ERROR_CHECK(adc_oneshot_del_unit(adc1_handle));
+    if (do_calibration1) {
+        example_adc_calibration_deinit(adc1_cali_handle);
+    }
+}
+
+void adc_test()
 {
     while (1) {
         ESP_ERROR_CHECK(adc_oneshot_read(adc1_handle, EXAMPLE_ADC1_CHAN0, &adc_raw[0][0]));
@@ -64,12 +85,7 @@ void adc_run(void)
 
     }
 
-    //Tear Down
-    ESP_ERROR_CHECK(adc_oneshot_del_unit(adc1_handle));
-    if (do_calibration1) {
-        example_adc_calibration_deinit(adc1_cali_handle);
-    }
-
+    adc_deinit();
 }
 
 

@@ -296,17 +296,23 @@ static esp_err_t echo_post_handler(httpd_req_t *req)
                 car_back(s->valueint, s2->valueint);
             } else {
                 //stop
-                car_stop();
+                //car_stop();
             }
         }
         else if (0 == strcmp(type_string, "btn")) {
             cJSON *item = cJSON_GetObjectItem(root, "value");
             ESP_LOGI(TAG, "btn: value:%d", item->valueint);
             if (item->valueint == 1) {
-                sound_play_gun();
+                //sound_play_gun();
+                sound_play_square(220);
             } else if (item->valueint == 2) {
-                sound_play_didi();
+                sound_play_square(440);
             }
+        }
+        else if (0 == strcmp(type_string, "pitch")) {
+            cJSON *item = cJSON_GetObjectItem(root, "value");
+            ESP_LOGI(TAG, "pitch: value:%d", item->valueint);
+            sound_play_square(item->valueint);
         }
         break;
     }

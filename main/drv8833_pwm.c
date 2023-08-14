@@ -2,13 +2,9 @@
 #include "driver/gpio.h"
 #include "driver/ledc.h"
 #include "my_gpio.h"
+#include "io_assignment.h"
 
 //static const char *TAG = "pwm";
-
-#define DRV8833_AIN1_IO     GPIO_NUM_4
-#define DRV8833_AIN2_IO     GPIO_NUM_5
-#define DRV8833_BIN1_IO     GPIO_NUM_6
-#define DRV8833_BIN2_IO     GPIO_NUM_7
 
 void pwm_init(void)
 {
@@ -123,15 +119,17 @@ void drv8833_motorB_stop(void)
 void car_forward(int speed1, int speed2)
 {
     gpio_enable_drv8833();
-    drv8833_motorA_run(speed1, 1);
-    drv8833_motorB_run(speed2, 1);
+    run_distance(40);
+    //drv8833_motorA_run(speed1, 1);
+    //drv8833_motorB_run(speed2, 1);
 }
 
 void car_back(int speed1, int speed2)
 {
     gpio_enable_drv8833();
-    drv8833_motorA_run(speed1, -1);
-    drv8833_motorB_run(speed2, -1);
+    run_distance(20);
+    //drv8833_motorA_run(speed1, -1);
+    //drv8833_motorB_run(speed2, -1);
 }
 
 
