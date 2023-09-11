@@ -28,6 +28,7 @@ extern "C" {
 
 //GPIO
 #define DRV8833_ENABLE_IO   GPIO_NUM_3     //output
+#define MAX98357_ENABLE_IO  GPIO_NUM_21    //output, U0TxD
 #define ME6212_ENABLE_IO    GPIO_NUM_21     //output, U0TxD
 #define M1_SPEED_CNT        GPIO_NUM_0      //input, isr
 #define M2_SPEED_CNT        GPIO_NUM_1      //input, isr

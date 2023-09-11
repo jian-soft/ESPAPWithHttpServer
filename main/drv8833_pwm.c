@@ -119,17 +119,17 @@ void drv8833_motorB_stop(void)
 void car_forward(int speed1, int speed2)
 {
     gpio_enable_drv8833();
-    run_distance(40);
-    //drv8833_motorA_run(speed1, 1);
-    //drv8833_motorB_run(speed2, 1);
+    //run_distance(40);
+    drv8833_motorA_run(speed1, 1);
+    drv8833_motorB_run(speed2, 1);
 }
 
 void car_back(int speed1, int speed2)
 {
     gpio_enable_drv8833();
-    run_distance(20);
-    //drv8833_motorA_run(speed1, -1);
-    //drv8833_motorB_run(speed2, -1);
+    //run_distance(20);
+    drv8833_motorA_run(speed1, -1);
+    drv8833_motorB_run(speed2, -1);
 }
 
 

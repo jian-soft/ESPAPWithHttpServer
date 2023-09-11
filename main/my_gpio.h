@@ -9,8 +9,8 @@ extern "C" {
 void gpio_init(void);
 void gpio_enable_drv8833(void);
 void gpio_disable_drv8833(void);
-void gpio_enable_me6212();
-void gpio_disable_me6212();
+void gpio_enable_max98357();
+void gpio_disable_max98357();
 
 
 int get_and_clear_m1_cnt();

@@ -9,7 +9,7 @@
 
 
 //static const char *TAG = "pwm";
-#define GPIO_OUTPUT_PIN_SEL ((1ULL<<DRV8833_ENABLE_IO) | (1ULL<<ME6212_ENABLE_IO))
+#define GPIO_OUTPUT_PIN_SEL ((1ULL<<DRV8833_ENABLE_IO) | (1ULL<<MAX98357_ENABLE_IO))
 #define GPIO_INPUT_PIN_SEL  ((1ULL<<M1_SPEED_CNT) | (1ULL<<M2_SPEED_CNT))
 
 int g_m1_cnt;
@@ -21,7 +21,7 @@ static QueueHandle_t gpio_evt_queue = NULL;
 static void IRAM_ATTR gpio_isr_handler(void* arg)
 {
     uint32_t gpio_num = (uint32_t) arg;
-    xQueueSendFromISR(gpio_evt_queue, &gpio_num, NULL);
+    //xQueueSendFromISR(gpio_evt_queue, &gpio_num, NULL);
 
 
 }
@@ -31,6 +31,7 @@ static void gpio_task_example(void* arg)
     uint32_t gpio_num;
     for (;;) {
         if (xQueueReceive(gpio_evt_queue, &gpio_num, portMAX_DELAY)) {
+            printf("dddd: gpio event: %ld\n", gpio_num);
             if (gpio_num == M1_SPEED_CNT) {
                 g_m1_cnt++;
                 if (g_m1_cnt >= g_target_distance) {
@@ -84,18 +85,17 @@ void gpio_enable_drv8833(void)
 {
     gpio_set_level(DRV8833_ENABLE_IO, 1);
 }
-
 void gpio_disable_drv8833(void)
 {
     gpio_set_level(DRV8833_ENABLE_IO, 0);
 }
-void gpio_enable_me6212()
+void gpio_enable_max98357()
 {
-    gpio_set_level(ME6212_ENABLE_IO, 1);
+    gpio_set_level(MAX98357_ENABLE_IO, 1);
 }
-void gpio_disable_me6212()
+void gpio_disable_max98357()
 {
-    gpio_set_level(ME6212_ENABLE_IO, 0);
+    gpio_set_level(MAX98357_ENABLE_IO, 0);
 }
 
 
@@ -111,6 +111,7 @@ void gpio_init(void)
     io_conf.pull_up_en = 0;
     gpio_config(&io_conf);
     gpio_disable_drv8833();
+    gpio_enable_max98357();
 
     //设置INPUT，检测小车转速
     io_conf.intr_type = GPIO_INTR_POSEDGE;
